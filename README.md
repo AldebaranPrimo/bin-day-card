@@ -80,7 +80,7 @@ bins:
 | `days` | `14` | Days shown in the strip. |
 | `lookahead_days` | `60` | How far ahead the card looks for the next date of each bin. |
 | `day_switch_time` | `10` | Hour (0-23) after which today's collection counts as done, like `day_switch_time` in Waste Collection Schedule. |
-| `language` | Home Assistant language | `en` or `it`; other languages fall back to English. |
+| `language` | Home Assistant language | `en`, `it` or `de`; other languages fall back to English. |
 | `show_legend` | `true` | Colour legend under the strip. |
 | `highlight_sunday` | `true` | Sunday labels in red. |
 | `tap_entity` | the calendar | Entity whose details open when the card is tapped. `""` disables the tap. |

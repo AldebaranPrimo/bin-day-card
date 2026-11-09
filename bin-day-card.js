@@ -35,6 +35,19 @@ const STRINGS = {
     chipToday: "Oggi", chipTomorrow: "Domani", chipDays: (n) => `${n} giorni`,
     noDate: "nessuna data", and: "e", none: "nessuna raccolta",
   },
+  de: {
+    title: "Abfallabholung",
+    today: (bins) => `Abholung heute: ${bins}`,
+    todaySub: "Abholung ist morgens - falls noch nicht erledigt, jetzt rausstellen.",
+    tonight: (bins) => `Heute Abend rausstellen: ${bins}`,
+    tonightSub: (day) => `Abholung morgen, ${day}.`,
+    nothing: "Heute Abend nichts herauszustellen",
+    nextSub: (bins, day, n) => `Nächste Abholung: ${bins}, ${day} (in ${n} ${n === 1 ? 'Tag' : 'Tagen'})`,
+    empty: "Keine Abholung geplant",
+    emptySub: "Der Kalender hat keine zukünftigen Termine: prüfe die Integration!",
+    chipToday: "Heute", chipTomorrow: "Morgen", chipDays: (n) => `${n} Tage`,
+    noDate: "kein Datum", and: "und", none: "keine Abholung",
+  },
 };
 
 // Used when a bin has no colour or icon of its own: guessed from its name (several languages).
