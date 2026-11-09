@@ -6,7 +6,7 @@
  * titles name the waste type), or sensors whose attributes are YYYY-MM-DD dates.
  * https://github.com/AldebaranPrimo/bin-day-card — MIT licence.
  */
-const VERSION = "1.0.2";
+const VERSION = "1.0.3";
 
 const STRINGS = {
   en: {
@@ -66,9 +66,18 @@ const day0 = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 const key = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const diff = (a, b) => Math.round((day0(b) - day0(a)) / 86400000);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const checkLanguage = (v) => {
+  if (v === undefined || v === null || v === "") return;
+  let ok = typeof v === "string";
+  try { ok = ok && Intl.getCanonicalLocales(v).length > 0; } catch (e) { ok = false; }
+  if (!ok) throw new Error("language must be a language code like en or it-IT");
+};
 const norm = (s) => String(s ?? "").trim().toLowerCase();
 
 // black or white text, whichever reads better on the colour
+const isHex = (v) => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v);
+const inRange = (v, min, max) => typeof v === "number" && Number.isFinite(v) && v >= min && v <= max;
+
 function textFor(hex) {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex || "");
   if (!m) return "#ffffff";
@@ -89,8 +98,16 @@ class BinDayCard extends HTMLElement {
 
   setConfig(config) {
     if (config.bins && !Array.isArray(config.bins)) throw new Error("bins must be a list");
-    for (const b of config.bins || []) if (!b.name) throw new Error("every bin needs a name");
-    this._config = { days: 14, lookahead_days: 60, day_switch_time: 10, show_legend: true, highlight_sunday: true, ...config };
+    for (const b of config.bins || []) {
+      if (!b.name) throw new Error("every bin needs a name");
+      for (const k of ["color", "text_color"]) if (b[k] != null && !isHex(b[k])) throw new Error(`${k} must be like #1e6fd9`);
+    }
+    checkLanguage(config.language);
+    const merged = { days: 14, lookahead_days: 60, day_switch_time: 10, show_legend: true, highlight_sunday: true, ...config };
+    if (!Number.isInteger(merged.days) || !inRange(merged.days, 1, 31)) throw new Error("days must be a whole number from 1 to 31");
+    if (!Number.isInteger(merged.lookahead_days) || !inRange(merged.lookahead_days, 1, 366)) throw new Error("lookahead_days must be a whole number from 1 to 366");
+    if (!Number.isInteger(merged.day_switch_time) || !inRange(merged.day_switch_time, 0, 23)) throw new Error("day_switch_time must be a whole hour from 0 to 23");
+    this._config = merged;
     if (!this.shadowRoot) this.attachShadow({ mode: "open" });
     this._sig = null;
     this._events = null;
@@ -110,7 +127,7 @@ class BinDayCard extends HTMLElement {
 
   getCardSize() { return 5; }
 
-  _now() { return this._config.now ? new Date(this._config.now) : new Date(); }
+  _now() { return new Date(); }
   _t() {
     const lang = norm(this._config.language || this._hass?.locale?.language || this._hass?.language || "en").slice(0, 2);
     return { s: STRINGS[lang] || STRINGS.en, lang: STRINGS[lang] ? lang : "en", locale: this._config.language || this._hass?.locale?.language || this._hass?.language || "en" };
@@ -127,7 +144,7 @@ class BinDayCard extends HTMLElement {
     const cals = this._calendars();
     if (!cals.length || !this._hass?.callApi) { this._events = []; return; }
     if (this._events && Date.now() - this._fetchedAt < 1800000 && this._eventsDay === key(this._now())) return;
-    const start = day0(this._now()), end = new Date(start.getTime() + (this._config.lookahead_days + 1) * 86400000);
+    const start = day0(this._now()), end = new Date(start.getTime() + (Math.max(this._config.days, this._config.lookahead_days) + 1) * 86400000);
     try {
       const lists = await Promise.all(cals.map((cal) => this._hass.callApi("GET", `calendars/${cal}?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`)));
       this._events = lists.flat().map((e) => ({ title: e.summary, date: e.start?.date || (e.start?.dateTime ? key(new Date(e.start.dateTime)) : null) })).filter((e) => e.date);

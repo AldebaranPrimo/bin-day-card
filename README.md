@@ -77,9 +77,9 @@ bins:
 | `calendar` | first `calendar.waste_collection_schedule…` | Calendar entity to read, or a list of calendars. `""` or `[]` reads no calendar (sensors only, see `entity`). |
 | `bins` | one per event title | List of bins, see below. The order is the order of the legend and of bins due on the same day. |
 | `title` | *Waste collection*, translated | Card title. `""` hides the title row. |
-| `days` | `14` | Days shown in the strip. |
-| `lookahead_days` | `60` | How far ahead the card looks for the next date of each bin. |
-| `day_switch_time` | `10` | Hour (0-23) after which today's collection counts as done, like `day_switch_time` in Waste Collection Schedule. |
+| `days` | `14` | Days shown in the strip, a whole number from 1 to 31. |
+| `lookahead_days` | `60` | How far ahead the card looks for the next date of each bin, a whole number from 1 to 366. |
+| `day_switch_time` | `10` | Whole hour (0-23) after which today's collection counts as done, like `day_switch_time` in Waste Collection Schedule. |
 | `language` | Home Assistant language | `en`, `it` or `de`; other languages fall back to English. |
 | `show_legend` | `true` | Colour legend under the strip. |
 | `highlight_sunday` | `true` | Sunday labels in red. |
@@ -92,7 +92,7 @@ bins:
 | `name` | required | Name shown on the card. |
 | `match` | `name` | Event title (or list of titles) of this bin in the calendar. Case does not matter. |
 | `color` | guessed from the name, or a palette colour | Bin colour, as `#rrggbb`. |
-| `text_color` | black or white, whichever reads better | Text colour on the full-colour tile and banner. |
+| `text_color` | black or white, whichever reads better | Text colour on the full-colour tile and banner, as `#rrggbb`. |
 | `icon` | guessed from the name, or `mdi:trash-can-outline` | Any `mdi:` icon. |
 | `entity` | none | Optional sensor whose attribute names are `YYYY-MM-DD` dates, all for this bin: for example a Waste Collection Schedule sensor with `details_format: upcoming` and `types:` limited to this one waste type. Its dates are added to the ones found in the calendar. |
 
