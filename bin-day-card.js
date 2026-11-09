@@ -6,7 +6,7 @@
  * titles name the waste type), or sensors whose attributes are YYYY-MM-DD dates.
  * https://github.com/AldebaranPrimo/bin-day-card — MIT licence.
  */
-const VERSION = "1.0.1";
+const VERSION = "1.0.2";
 
 const STRINGS = {
   en: {
