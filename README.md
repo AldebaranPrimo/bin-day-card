@@ -81,7 +81,9 @@ bins:
 | `lookahead_days` | `60` | How far ahead the card looks for the next date of each bin, a whole number from 1 to 366. |
 | `day_switch_time` | `10` | Whole hour (0-23) after which today's collection counts as done, like `day_switch_time` in Waste Collection Schedule. |
 | `language` | Home Assistant language | `en`, `it` or `de`; other languages fall back to English. |
-| `show_legend` | `true` | Colour legend under the strip. |
+| `show_tiles` | `true` | `false` hides the row of bin tiles. |
+| `show_strip` | `true` | `false` hides the strip of days. With `show_tiles: false` as well, only the title, the banner and the legend are left (hide those two with `title: ""` and `show_legend: false`): a compact card for a phone. |
+| `show_legend` | `true` | Colour legend at the bottom of the card. |
 | `highlight_sunday` | `true` | Sunday labels in red. |
 | `tap_entity` | the calendar | Entity whose details open when the card is tapped. `""` disables the tap. |
 
@@ -90,7 +92,7 @@ bins:
 | Option | Default | Description |
 |---|---|---|
 | `name` | required | Name shown on the card. |
-| `match` | `name` | Event title (or list of titles) of this bin in the calendar. Case does not matter. |
+| `match` | `name` | Exact event title (or list of titles) of this bin in the calendar. Case does not matter. A value with `*` is a pattern, where `*` stands for any text: `*papier*` matches every title that contains "papier", `Papiertonne*` every title that starts with it. |
 | `color` | guessed from the name, or a palette colour | Bin colour, as `#rrggbb`. |
 | `text_color` | black or white, whichever reads better | Text colour on the full-colour tile and banner, as `#rrggbb`. |
 | `icon` | guessed from the name, or `mdi:trash-can-outline` | Any `mdi:` icon. |

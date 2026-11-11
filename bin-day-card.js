@@ -6,7 +6,7 @@
  * titles name the waste type), or sensors whose attributes are YYYY-MM-DD dates.
  * https://github.com/AldebaranPrimo/bin-day-card — MIT licence.
  */
-const VERSION = "1.0.3";
+const VERSION = "1.1.0";
 
 const STRINGS = {
   en: {
@@ -73,6 +73,30 @@ const checkLanguage = (v) => {
   if (!ok) throw new Error("language must be a language code like en or it-IT");
 };
 const norm = (s) => String(s ?? "").trim().toLowerCase();
+// A `match` value is compared with the whole event title. Only a value that contains `*` is a pattern:
+// `*` stands for any text, everything else is taken literally, and the pattern still covers the whole title.
+const exact = (m) => {
+  const n = norm(m);
+  return (title) => title === n;
+};
+// A value of `match` with * is a pattern over the whole title; linear scan, no regular expression.
+const matcher = (m) => {
+  const n = norm(m);
+  if (!n.includes("*")) return (title) => title === n;
+  const parts = n.split("*");
+  const first = parts[0], last = parts[parts.length - 1], mid = parts.slice(1, -1).filter(Boolean);
+  return (title) => {
+    if (title.length < first.length + last.length || !title.startsWith(first) || !title.endsWith(last)) return false;
+    const end = title.length - last.length;
+    let pos = first.length;
+    for (const part of mid) {
+      const at = title.indexOf(part, pos);
+      if (at < 0 || at + part.length > end) return false;
+      pos = at + part.length;
+    }
+    return true;
+  };
+};
 
 // black or white text, whichever reads better on the colour
 const isHex = (v) => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v);
@@ -103,7 +127,7 @@ class BinDayCard extends HTMLElement {
       for (const k of ["color", "text_color"]) if (b[k] != null && !isHex(b[k])) throw new Error(`${k} must be like #1e6fd9`);
     }
     checkLanguage(config.language);
-    const merged = { days: 14, lookahead_days: 60, day_switch_time: 10, show_legend: true, highlight_sunday: true, ...config };
+    const merged = { days: 14, lookahead_days: 60, day_switch_time: 10, show_legend: true, show_tiles: true, show_strip: true, highlight_sunday: true, ...config };
     if (!Number.isInteger(merged.days) || !inRange(merged.days, 1, 31)) throw new Error("days must be a whole number from 1 to 31");
     if (!Number.isInteger(merged.lookahead_days) || !inRange(merged.lookahead_days, 1, 366)) throw new Error("lookahead_days must be a whole number from 1 to 366");
     if (!Number.isInteger(merged.day_switch_time) || !inRange(merged.day_switch_time, 0, 23)) throw new Error("day_switch_time must be a whole hour from 0 to 23");
@@ -165,8 +189,8 @@ class BinDayCard extends HTMLElement {
     return bins.map((b, i) => {
       const g = guess(b.name) || guess(b.match);
       const color = b.color || g?.color || PALETTE[i % PALETTE.length];
-      const matches = [].concat(b.match ?? b.name).map(norm);
-      const dates = new Set(events.filter((e) => matches.includes(norm(e.title))).map((e) => e.date));
+      const matches = b.match == null ? [exact(b.name)] : [].concat(b.match).map(matcher);
+      const dates = new Set(events.filter((e) => { const t = norm(e.title); return matches.some((m) => m(t)); }).map((e) => e.date));
       const st = b.entity && this._hass?.states[b.entity];
       if (st) Object.keys(st.attributes).filter((k) => DATE_RE.test(k)).forEach((k) => dates.add(k));
       return { ...b, i, color, text: b.text_color || textFor(color), icon: b.icon || g?.icon || "mdi:trash-can-outline", dates };
@@ -279,6 +303,8 @@ class BinDayCard extends HTMLElement {
         .num.multi { text-shadow: 0 1px 2px rgba(0,0,0,.6); }
         .today .num { outline: 2px solid var(--primary-text-color); outline-offset: 1px; }
         .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 12px; font-size: .72rem; color: var(--secondary-text-color); }
+        .banner:last-child, .tiles:last-child { margin-bottom: 0; }
+        .tiles + .legend { margin-top: 0; }
         .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
         @container bdc (max-width: 420px) {
           ha-card { padding: 12px; }
@@ -300,8 +326,8 @@ class BinDayCard extends HTMLElement {
           <ha-icon icon="${esc(bannerIcon)}"></ha-icon>
           <div><b>${esc(head)}</b><span>${esc(sub)}</span></div>
         </div>
-        ${bins.length ? `<div class="tiles ${focus.length ? "has-focus" : ""} ${bins.length > 5 ? "many" : ""}">${tiles}</div>` : ""}
-        <div class="strip">${cells.join("")}</div>
+        ${c.show_tiles && bins.length ? `<div class="tiles ${focus.length ? "has-focus" : ""} ${bins.length > 5 ? "many" : ""}">${tiles}</div>` : ""}
+        ${c.show_strip ? `<div class="strip">${cells.join("")}</div>` : ""}
         ${c.show_legend && bins.length ? `<div class="legend">${bins.map((b) => `<span><i style="background:${b.color}"></i>${esc(b.name)}</span>`).join("")}</div>` : ""}
       </ha-card>`;
     const card = this.shadowRoot.querySelector("ha-card");
