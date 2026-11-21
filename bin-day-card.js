@@ -6,7 +6,7 @@
  * titles name the waste type), or sensors whose attributes are YYYY-MM-DD dates.
  * https://github.com/AldebaranPrimo/bin-day-card — MIT licence.
  */
-const VERSION = "1.1.0";
+const VERSION = "1.2.0";
 
 const STRINGS = {
   en: {
@@ -127,7 +127,7 @@ class BinDayCard extends HTMLElement {
       for (const k of ["color", "text_color"]) if (b[k] != null && !isHex(b[k])) throw new Error(`${k} must be like #1e6fd9`);
     }
     checkLanguage(config.language);
-    const merged = { days: 14, lookahead_days: 60, day_switch_time: 10, show_legend: true, show_tiles: true, show_strip: true, highlight_sunday: true, ...config };
+    const merged = { days: 14, lookahead_days: 60, day_switch_time: 10, show_legend: true, show_summary: true, show_tiles: true, show_strip: true, highlight_sunday: true, ...config };
     if (!Number.isInteger(merged.days) || !inRange(merged.days, 1, 31)) throw new Error("days must be a whole number from 1 to 31");
     if (!Number.isInteger(merged.lookahead_days) || !inRange(merged.lookahead_days, 1, 366)) throw new Error("lookahead_days must be a whole number from 1 to 366");
     if (!Number.isInteger(merged.day_switch_time) || !inRange(merged.day_switch_time, 0, 23)) throw new Error("day_switch_time must be a whole hour from 0 to 23");
@@ -322,10 +322,10 @@ class BinDayCard extends HTMLElement {
       </style>
       <ha-card>
         ${title ? `<div class="head"><h2>${esc(title)}</h2><span class="date">${esc(dayText(now))}</span></div>` : ""}
-        <div class="banner ${focus.length ? "" : "calm"} ${focus.length > 1 ? "multi" : ""}" style="${banner}">
+        ${c.show_summary || !dated.length ? `<div class="banner ${focus.length ? "" : "calm"} ${focus.length > 1 ? "multi" : ""}" style="${banner}">
           <ha-icon icon="${esc(bannerIcon)}"></ha-icon>
           <div><b>${esc(head)}</b><span>${esc(sub)}</span></div>
-        </div>
+        </div>` : ""}
         ${c.show_tiles && bins.length ? `<div class="tiles ${focus.length ? "has-focus" : ""} ${bins.length > 5 ? "many" : ""}">${tiles}</div>` : ""}
         ${c.show_strip ? `<div class="strip">${cells.join("")}</div>` : ""}
         ${c.show_legend && bins.length ? `<div class="legend">${bins.map((b) => `<span><i style="background:${b.color}"></i>${esc(b.name)}</span>`).join("")}</div>` : ""}
